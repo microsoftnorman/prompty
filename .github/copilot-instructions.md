@@ -192,8 +192,9 @@ Prompty is a production-ready Blazor Server application featuring GitHub OAuth a
 
 ### Service Registration
 ```csharp
-builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<IGitHubRepositoryService, GitHubRepositoryService>();
 builder.Services.AddHttpClient<IGitHubApiClient, GitHubApiClient>();
+builder.Services.AddScoped<IAuthenticationService, GitHubAuthenticationService>();
 ```
 
 ### Component Events
@@ -211,7 +212,15 @@ private async Task HandleSelection(string item)
 ```csharp
 protected override async Task OnInitializedAsync()
 {
-    _repositories = await RepositoryService.GetRepositoriesAsync();
+    try
+    {
+        _repositories = await GitHubRepositoryService.GetRepositoriesAsync();
+    }
+    catch (HttpRequestException ex)
+    {
+        Logger.LogError(ex, "Failed to load repositories from GitHub API");
+        _errorMessage = "Unable to load repositories. Please try again later.";
+    }
 }
 ```
 
